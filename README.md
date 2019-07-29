@@ -28,7 +28,6 @@ To use this plugin in your projects:
 * 1. edit your pom.xml and add the plugin in the 'build' section:
 
 	<build>
-		...
 		<plugins>
 			<plugin>
 				<groupId>mcp.kiuwan.maven</groupId>
@@ -36,7 +35,6 @@ To use this plugin in your projects:
 				<version>0.1</version>
 			</plugin>
 		</plugins>
-		...
 	</build>
 
 * 2. from your project root directory, execute:
