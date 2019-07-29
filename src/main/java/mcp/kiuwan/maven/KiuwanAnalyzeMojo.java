@@ -37,16 +37,10 @@ import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Stream;
-
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 
@@ -61,22 +55,34 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 	private static final String ANALYSIS_SCOPE_COMPLETE_DELIVERY = "completeDelivery";
 	
 	@Parameter(property = "kiuwan.home", defaultValue = "${env.KIUWAN_LOCAL_ANALYZER_HOME}")
-	private String kHome;
+	private String home;
 	
 	@Parameter(property = "kiuwan.sourcePath", defaultValue = "${basedir}")
-	private String kSourcePath;
+	private String sourcePath;
 	
 	@Parameter(property = "kiuwan.softwareName", defaultValue = "${project.name}")
-	private String kSoftwareName;
+	private String softwareName;
 	
 	@Parameter(property = "kiuwan.label", defaultValue = "${project.version}")
-	private String kLabel;
+	private String label;
 	
 	@Parameter(property = "kiuwan.wait-for-results", defaultValue = "false")
-	private boolean kWaitForResults;
+	private boolean waitForResults;
 		
 	@Parameter(property = "kiuwan.analysis-scope", defaultValue = "baseline")
-	private String kAnalysisScope;
+	private String analysisScope;
+		
+	@Parameter(property = "kiuwan.additionalOptions", defaultValue = "")
+	private String additionalOptions;
+	
+	@Parameter(property = "kiuwan.extraParams", defaultValue = "")
+	private String extraParams;
+			
+	@Parameter(property = "kiuwan.timestampInLogFilename", defaultValue = "true")
+	private boolean timestampInLogFilename;
+		
+	@Parameter(property = "kiuwan.create", defaultValue = "false")
+	private boolean create;
 		
 	@Parameter(readonly = true, required = true, defaultValue = "${project.build.directory}")
 	private File buildDirectory;
@@ -96,47 +102,75 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 	private String outputFileName;
 	
 
-	public String getKHome() {
-		return kHome;
+	public String getHome() {
+		return home;
 	}
-	public void setKHome(String kHome) {
-		this.kHome = kHome;
+	public void setHome(String home) {
+		this.home = home;
 	}
 	
-	public String getKSourcePath() {
-		return kSourcePath;
+	public String getSourcePath() {
+		return sourcePath;
 	}
-	public void setKSourcePath(String kSourcePath) {
-		this.kSourcePath = kSourcePath;
+	public void setSourcePath(String sourcePath) {
+		this.sourcePath = sourcePath;
 	}
 
-	public String getKSoftwareName() {
-		return kSoftwareName;
+	public String getSoftwareName() {
+		return softwareName;
 	}
-	public void setKSoftwareName(String kSoftwareName) {
-		this.kSoftwareName = kSoftwareName;
-	}
-	
-	public String getKLabel() {
-		return kLabel;
-	}
-	public void setKLabel(String kLabel) {
-		this.kLabel = kLabel;
+	public void setSoftwareName(String softwareName) {
+		this.softwareName = softwareName;
 	}
 	
-	public String getKAnalysisScope() {
-		return kAnalysisScope;
+	public String getLabel() {
+		return label;
 	}
-	public void setKAnalysisScope(String kAnalysisScope) {
-		this.kAnalysisScope = kAnalysisScope;
+	public void setLabel(String label) {
+		this.label = label;
 	}
 	
-	public boolean getKWaitForResults() {
-		return kWaitForResults;
+	public boolean getTimestampInLogFilename() {
+		return timestampInLogFilename;
 	}
-	public void setKWaitForResults(boolean kWaitForResults) {
-		this.kWaitForResults = kWaitForResults;
+	public void setTimestampInLogFilename(boolean timestampInLogFilename) {
+		this.timestampInLogFilename = timestampInLogFilename;
+	}	
+	
+	public String getAnalysisScope() {
+		return analysisScope;
 	}
+	public void setAnalysisScope(String analysisScope) {
+		this.analysisScope = analysisScope;
+	}
+	
+	public String getAdditionalOptions() {
+		return additionalOptions;
+	}
+	public void setAdditionalOptions(String additionalOptions) {
+		this.additionalOptions = additionalOptions;
+	}
+	
+	public String getExtraParams() {
+		return extraParams;
+	}
+	public void setExtraParams(String extraParams) {
+		this.extraParams = extraParams;
+	}
+	
+	public boolean getWaitForResults() {
+		return waitForResults;
+	}
+	public void setWaitForResults(boolean waitForResults) {
+		this.waitForResults = waitForResults;
+	}	
+	
+	public boolean getCreate() {
+		return create;
+	}
+	public void setCreate(boolean create) {
+		this.create = create;
+	}	
 	
 	
 	public void execute() throws MojoExecutionException {
@@ -163,24 +197,29 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 	private String buildCommandLine() {		
 		// builds executable name.	
 		if (Os.isValidFamily(Os.FAMILY_WINDOWS)) {
-			execExecutable = StringUtils.trim(getKHome()) + "\\bin\\agent.cmd";			
+			execExecutable = StringUtils.trim(getHome()) + "\\bin\\agent.cmd";			
 		} else {
-			execExecutable = StringUtils.trim(getKHome()) + "/bin/agent.sh";
+			execExecutable = StringUtils.trim(getHome()) + "/bin/agent.sh";
 		}
 		
 		// builds args
 		execArgs = new ArrayList<>();
 		execArgs.add("--softwareName");
-		execArgs.add(StringUtils.trim(getKSoftwareName()));
+		execArgs.add(StringUtils.trim(getSoftwareName()));
+				
+		if (getCreate() && ANALYSIS_SCOPE_BASELINE.equalsIgnoreCase(StringUtils.trim(getAnalysisScope()))) {
+			execArgs.add("--create");
+		}
+			
 		execArgs.add("--sourcePath");
-		execArgs.add(StringUtils.trim(getKSourcePath()));
+		execArgs.add(StringUtils.trim(getSourcePath()));
 		
-		if (StringUtils.isNotEmpty(getKLabel())) {
+		if (StringUtils.isNotEmpty(getLabel())) {
 			execArgs.add("--label");
-			execArgs.add(StringUtils.trim(getKLabel()));
+			execArgs.add(StringUtils.trim(getLabel()));
 		}
 		
-		if (ANALYSIS_SCOPE_BASELINE.equalsIgnoreCase(StringUtils.trim(getKAnalysisScope()))) {
+		if (ANALYSIS_SCOPE_BASELINE.equalsIgnoreCase(StringUtils.trim(getAnalysisScope()))) {
 			execArgs.add("--analysis-scope");
 			execArgs.add(ANALYSIS_SCOPE_BASELINE);			
 		} else {
@@ -191,15 +230,32 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 			execArgs.add("inprogress");		
 		}
 		
-		if (getKWaitForResults()) {
+		if (StringUtils.isNotEmpty(getAdditionalOptions())) {
+			String[] options = StringUtils.trim(getAdditionalOptions()).split("\\s+");
+			for (String option: options) {
+				execArgs.add(StringUtils.trim(option));
+			}
+		}
+		
+		if (getWaitForResults()) {
 			execArgs.add("--wait-for-results");
 		}
 
+		if (StringUtils.isNotEmpty(getExtraParams())) {
+			String[] params = StringUtils.trim(getExtraParams()).split("\\s+");
+			for (String param: params) {
+				execArgs.add(StringUtils.trim(param));
+			}
+		}
+		
 		// builds output file.
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
-		LocalDateTime now = LocalDateTime.now();
-		String timestamp = dtf.format(now);
-		File outputFile = new File(buildDirectory + "/kiuwan/" + LOGFILENAME + "-" + timestamp + ".log");
+		String timestamp = "";
+		if (getTimestampInLogFilename()) {
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+			LocalDateTime now = LocalDateTime.now();
+			timestamp = "-" + dtf.format(now);
+		}
+		File outputFile = new File(buildDirectory + "/kiuwan/" + LOGFILENAME + timestamp + ".log");
 		outputFile.getParentFile().mkdirs();		
 		outputFileName = outputFile.getAbsolutePath();
 		

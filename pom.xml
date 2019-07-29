@@ -6,7 +6,7 @@
 	<groupId>mcp.kiuwan.maven</groupId>
 	<artifactId>kiuwan-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
-	<version>0.1</version>
+	<version>0.2</version>
 	<name>kiuwan-maven-plugin</name>
 	<url>https://github.com/mcprol/kiuwan-maven-plugin</url>
 

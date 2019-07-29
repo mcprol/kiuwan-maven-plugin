@@ -12,41 +12,41 @@ Here are the steps to install this maven plugin in your maven installation.
 
 * 2. At root directory, run the following maven comand to compile:
 
-	> mvn clean install
+	mvn clean install
 	
 * 3. Deploy the plugin in your maven local repository:
 
-	> mvn deploy -DaltDeploymentRepository=local-repository::default::file://d:/apache-maven-local-repository
+	mvn deploy -DaltDeploymentRepository=local-repository::default::file://d:/apache-maven-local-repository
 
 * 4. define a new OS environment variable, with the location of your Kiuwan Local Analizer:
 
-	(windows) set KIUWAN_LOCAL_ANALYZER_HOME=C:\KiuwanLocalAnalyzer
+	set KIUWAN_LOCAL_ANALYZER_HOME=C:\KiuwanLocalAnalyzer  (windows)
 	
-	(unix) export KIUWAN_LOCAL_ANALYZER_HOME=/opt/KiuwanLocalAnalyzer
+	export KIUWAN_LOCAL_ANALYZER_HOME=/opt/KiuwanLocalAnalyzer  (unix)
 
 ## run.
 To use this plugin in your projects:
 * 1. edit your pom.xml and add the plugin in the 'build' section:
 
 ```xml
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>mcp.kiuwan.maven</groupId>
-				<artifactId>kiuwan-maven-plugin</artifactId>
-				<version>0.1</version>
-			</plugin>
-		</plugins>
-	</build>
+<build>
+	<plugins>
+		<plugin>
+			<groupId>mcp.kiuwan.maven</groupId>
+			<artifactId>kiuwan-maven-plugin</artifactId>
+			<version>0.2</version>
+		</plugin>
+	</plugins>
+</build>
 ```
 
 * 2. from your project root directory, execute:
 
-	> mvn kiuwan:analyze
+	mvn kiuwan:analyze
 	
 or, you can overwrite some options:	
 
-	> mvn kiuwan:analyze -Dkiuwan.softwareName=spiracle 
+	mvn kiuwan:analyze -Dkiuwan.softwareName=spiracle 
 
 output (out and err) from above commands is left at file:
 
@@ -55,28 +55,52 @@ output (out and err) from above commands is left at file:
 * 3. Also, you can insert the 'analyze' goal in a maven phase, like test:
 
 ```xml
-	<plugin>
-		<groupId>mcp.kiuwan.maven</groupId>
-		<artifactId>kiuwan-maven-plugin</artifactId>
-		<version>0.1</version>
-		
-		<executions>  
-			<execution>  
-				<phase>test</phase>  
-				<goals>  
-					<goal>analyze</goal>  
-				</goals>
-			</execution>
-		</executions>
-	</plugin>
+<plugin>
+	<groupId>mcp.kiuwan.maven</groupId>
+	<artifactId>kiuwan-maven-plugin</artifactId>
+	<version>0.2</version>
+	
+	<executions>  
+		<execution>  
+			<phase>test</phase>  
+			<goals>  
+				<goal>analyze</goal>  
+			</goals>
+		</execution>
+	</executions>
+</plugin>
 ```
 
 and run maven with the standard options only:
 
-	> mvn clean install	
+	mvn clean install	
+
+* 4. And even you can add default values in your POM file:
+
+```xml
+<plugin>
+	<groupId>mcp.kiuwan.maven</groupId>
+	<artifactId>kiuwan-maven-plugin</artifactId>
+	<version>0.2</version>
+	
+	<executions>  
+		<execution>  
+			<phase>test</phase>  
+			<goals>  
+				<goal>analyze</goal>  
+			</goals>
+		</execution>
+	</executions>
+	
+	<configuration>
+		<label>SNAPSHOT</label>
+		<timestampInLogFilename>false</timestampInLogFilename>
+	</configuration>
+</plugin>
+```
 	
 ## options.
-These are the valid options that you can overwrite in your command line:
+These are the valid options, and their default values, that you can overwrite in your command line (**-D***property*=*value*):
 
 	@Parameter(property = "kiuwan.home", defaultValue = "${env.KIUWAN_LOCAL_ANALYZER_HOME}")
 	@Parameter(property = "kiuwan.sourcePath", defaultValue = "${basedir}")
@@ -84,18 +108,35 @@ These are the valid options that you can overwrite in your command line:
 	@Parameter(property = "kiuwan.label", defaultValue = "${project.version}")
 	@Parameter(property = "kiuwan.wait-for-results", defaultValue = "false")
 	@Parameter(property = "kiuwan.analysis-scope", defaultValue = "baseline")
+	@Parameter(property = "kiuwan.additionalOptions", defaultValue = "")
+	@Parameter(property = "kiuwan.extraParams", defaultValue = "")
+	@Parameter(property = "kiuwan.timestampInLogFilename", defaultValue = "true")
+	@Parameter(property = "kiuwan.create", defaultValue = "false")
+
+**kiuwan.additionalOptions** is used for unusual KLA command line options: 
+	
+	-Dkiuwan.additionalOptions="--user username@company.com --pass thisisthekey"
+
+**kiuwan.extraParams** is used for KLA internal options (*param*=*value*): 
+	
+	-Dkiuwan.extraParams="ignore=architecture,insights encoding=ISO-8859-1"
+
+**kiuwan.timestampInLogFilename** adds current timestamp to output filename:
+	
+	target/kiuwan/analyze-20190729230524356.log (true)
+	target/kiuwan/analyze.log (false)
 
 ## examples of running 'baseline' analysis
 
-	> mvn kiuwan:analyze
-	> mvn kiuwan:analyze -Dkiuwan.label="version-2.3.0" 
+	mvn kiuwan:analyze
+	mvn kiuwan:analyze -Dkiuwan.label="version-2.3.0" 
 
 ## examples of running 'delivery' analysis
 
-	> mvn kiuwan:analyze -Dkiuwan.analysis-scope=completeDelivery
-	> mvn kiuwan:analyze -Dkiuwan.analysis-scope=completeDelivery -Dkiuwan.wait-for-results=true
+	mvn kiuwan:analyze -Dkiuwan.analysis-scope=completeDelivery
+	mvn kiuwan:analyze -Dkiuwan.analysis-scope=completeDelivery -Dkiuwan.wait-for-results=true
 
-if 'kiuwan audit' fails, KLA returns an error code 10, and maven build fails. An error message is dumped to consoe:
+if 'kiuwan audit' fails, KLA returns an error code 10, and maven build fails. An error message is dumped to console:
 
 	[ERROR] [kiuwan] Command execution failed.
 	[ERROR] [kiuwan] Check error details at: D:\_github_mcprol\kiuwan-maven-plugin-test-spiracle-master\target\kiuwan\analyze-20190729172718625.log
