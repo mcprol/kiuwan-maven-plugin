@@ -21,12 +21,14 @@ Here are the steps to install this maven plugin in your maven installation.
 * 4. define a new OS environment variable, with the location of your Kiuwan Local Analizer:
 
 	(windows) set KIUWAN_LOCAL_ANALYZER_HOME=C:\KiuwanLocalAnalyzer
+	
 	(unix) export KIUWAN_LOCAL_ANALYZER_HOME=/opt/KiuwanLocalAnalyzer
 
 ## run.
 To use this plugin in your projects:
 * 1. edit your pom.xml and add the plugin in the 'build' section:
 
+```xml
 	<build>
 		<plugins>
 			<plugin>
@@ -36,6 +38,7 @@ To use this plugin in your projects:
 			</plugin>
 		</plugins>
 	</build>
+```
 
 * 2. from your project root directory, execute:
 
@@ -51,6 +54,7 @@ output (out and err) from above commands is left at file:
 	
 * 3. Also, you can insert the 'analyze' goal in a maven phase, like test:
 
+```xml
 	<plugin>
 		<groupId>mcp.kiuwan.maven</groupId>
 		<artifactId>kiuwan-maven-plugin</artifactId>
@@ -65,6 +69,7 @@ output (out and err) from above commands is left at file:
 			</execution>
 		</executions>
 	</plugin>
+```
 
 and run maven with the standard options only:
 
