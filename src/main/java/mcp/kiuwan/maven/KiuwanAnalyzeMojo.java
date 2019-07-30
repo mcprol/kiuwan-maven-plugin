@@ -50,6 +50,8 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 	
 	private static final String LOGPREFIX = "[kiuwan] ";
 	private static final String LOGFILENAME = "analyze";
+	private static final String REPORTLOGFILENAME = "download";
+	private static final String BUILDSUBDIRECTORY = "/kiuwan/";
 
 	private static final String ANALYSIS_SCOPE_BASELINE = "baseline";
 	private static final String ANALYSIS_SCOPE_COMPLETE_DELIVERY = "completeDelivery";
@@ -66,10 +68,10 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 	@Parameter(property = "kiuwan.label", defaultValue = "${project.version}")
 	private String label;
 	
-	@Parameter(property = "kiuwan.wait-for-results", defaultValue = "false")
+	@Parameter(property = "kiuwan.waitForResults", defaultValue = "false")
 	private boolean waitForResults;
 		
-	@Parameter(property = "kiuwan.analysis-scope", defaultValue = "baseline")
+	@Parameter(property = "kiuwan.analysisScope", defaultValue = "baseline")
 	private String analysisScope;
 		
 	@Parameter(property = "kiuwan.additionalOptions", defaultValue = "")
@@ -83,6 +85,9 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 		
 	@Parameter(property = "kiuwan.create", defaultValue = "false")
 	private boolean create;
+		
+	@Parameter(property = "kiuwan.downloadReport", defaultValue = "false")
+	private boolean downloadReport;
 		
 	@Parameter(readonly = true, required = true, defaultValue = "${project.build.directory}")
 	private File buildDirectory;
@@ -172,16 +177,34 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 		this.create = create;
 	}	
 	
+	public boolean getDownloadReport() {
+		return downloadReport;
+	}
+	public void setDownloadReport(boolean downloadReport) {
+		this.downloadReport = downloadReport;
+	}	
+	
 	
 	public void execute() throws MojoExecutionException {
 		getLog().info(LOGPREFIX + "Running " + buildCommandLine());
-		runExecMojo();
+		
+		try {
+			runExecMojo(execExecutable, execArgs, outputFileName);
+		} catch (MojoExecutionException e) {
+			throw e;
+		} finally {
+			if (getDownloadReport() && getWaitForResults()) {
+				String analysisCode = Utils.readAnalysisCode(outputFileName, getLog());
+				getLog().info(LOGPREFIX + "Running " + buildDownloadReportCommandLine(analysisCode));
+				runExecMojo(execExecutable, execArgs, outputFileName);
+			}
+		}		
 	}
 
 	
-	private void runExecMojo() throws MojoExecutionException{
+	private void runExecMojo(String executable, List<String> args, String outputFileName) throws MojoExecutionException{
 		Plugin execPlugin = ExecPluginHelper.createMavenExecPlugin();
-		Xpp3Dom configuration = ExecPluginHelper.createExecPluginConfiguration(execExecutable, execArgs, outputFileName);
+		Xpp3Dom configuration = ExecPluginHelper.createExecPluginConfiguration(executable, args, outputFileName);
 		
 		try {
 			executeMojo(execPlugin, "exec", configuration, executionEnvironment(mavenProject, mavenSession, pluginManager));
@@ -255,12 +278,38 @@ public class KiuwanAnalyzeMojo extends AbstractMojo {
 			LocalDateTime now = LocalDateTime.now();
 			timestamp = "-" + dtf.format(now);
 		}
-		File outputFile = new File(buildDirectory + "/kiuwan/" + LOGFILENAME + timestamp + ".log");
+		File outputFile = new File(buildDirectory + BUILDSUBDIRECTORY + LOGFILENAME + timestamp + ".log");
 		outputFile.getParentFile().mkdirs();		
 		outputFileName = outputFile.getAbsolutePath();
 		
 		return execExecutable + " " + execArgs;
 	}
 	
+	private String buildDownloadReportCommandLine(String analysisCode) {		
+		// builds args
+		execArgs = new ArrayList<>();
+		execArgs.add("--softwareName");
+		execArgs.add(StringUtils.trim(getSoftwareName()));
+		
+		execArgs.add("--retrieve-data");
+		
+		execArgs.add("--analysis-code");
+		execArgs.add(analysisCode);
+		
+		String format = "threadfix";
+		execArgs.add("--format");		
+		execArgs.add(format);
+		
+		File reportFile = new File(buildDirectory + BUILDSUBDIRECTORY + "report" + "-" + format + "-" + analysisCode + ".threadfix");
+		execArgs.add("--output-file");		
+		execArgs.add(reportFile.getAbsolutePath());
+		
+		// builds output file.
+		File outputFile = new File(buildDirectory + BUILDSUBDIRECTORY + REPORTLOGFILENAME + "-" + analysisCode + ".log");
+		outputFile.getParentFile().mkdirs();		
+		outputFileName = outputFile.getAbsolutePath();
+		
+		return execExecutable + " " + execArgs;
+	}
 }
 

@@ -1,9 +1,9 @@
 # kiuwan-maven-plugin
 A simple maven plugin to run Kiuwan Local Analyzer from your POM files.
 
-This plugin is really a shortcut (launcher, runner, etc) for the Kiuwan Local Analyzer command line script.
+This plugin is really a shortcut (launcher, runner or whatever) for the Kiuwan Local Analyzer command line script.
 
-I'm assuming that you have an KiuwanLocalAnalyzer installed and configured in your machine. Also that you are familiar with its use, and the different options for 'baseline' and 'deliveries'.
+I'm assuming that you have a KiuwanLocalAnalyzer installed and configured in your machine. Also that you are familiar with its use, and the different options for 'baseline' and 'deliveries'.
 
 ## install.
 
@@ -34,7 +34,7 @@ To use this plugin in your projects:
 		<plugin>
 			<groupId>mcp.kiuwan.maven</groupId>
 			<artifactId>kiuwan-maven-plugin</artifactId>
-			<version>0.2</version>
+			<version>1.0</version>
 		</plugin>
 	</plugins>
 </build>
@@ -58,7 +58,7 @@ output (out and err) from above commands is left at file:
 <plugin>
 	<groupId>mcp.kiuwan.maven</groupId>
 	<artifactId>kiuwan-maven-plugin</artifactId>
-	<version>0.2</version>
+	<version>1.0</version>
 	
 	<executions>  
 		<execution>  
@@ -106,12 +106,13 @@ These are the valid options, and their default values, that you can overwrite in
 	@Parameter(property = "kiuwan.sourcePath", defaultValue = "${basedir}")
 	@Parameter(property = "kiuwan.softwareName", defaultValue = "${project.name}")
 	@Parameter(property = "kiuwan.label", defaultValue = "${project.version}")
-	@Parameter(property = "kiuwan.wait-for-results", defaultValue = "false")
-	@Parameter(property = "kiuwan.analysis-scope", defaultValue = "baseline")
+	@Parameter(property = "kiuwan.waitForResults", defaultValue = "false")
+	@Parameter(property = "kiuwan.analysisScope", defaultValue = "baseline")
 	@Parameter(property = "kiuwan.additionalOptions", defaultValue = "")
 	@Parameter(property = "kiuwan.extraParams", defaultValue = "")
 	@Parameter(property = "kiuwan.timestampInLogFilename", defaultValue = "true")
 	@Parameter(property = "kiuwan.create", defaultValue = "false")
+	@Parameter(property = "kiuwan.downloadReport", defaultValue = "false")
 
 **kiuwan.additionalOptions** is used for unusual KLA command line options: 
 	
@@ -126,6 +127,8 @@ These are the valid options, and their default values, that you can overwrite in
 	target/kiuwan/analyze-20190729230524356.log (true)
 	target/kiuwan/analyze.log (false)
 
+**kiuwan.downloadReport** download to target/kiuwan directory a report (in [threadfix](https://denimgroup.atlassian.net/wiki/spaces/TDOC/pages/496009270/ThreadFix+File+Format) format) with the vulnerabilities found in your application. Only if *kiuwan.waitForResults=true*
+	
 ## examples of running 'baseline' analysis
 
 	mvn kiuwan:analyze
@@ -133,8 +136,8 @@ These are the valid options, and their default values, that you can overwrite in
 
 ## examples of running 'delivery' analysis
 
-	mvn kiuwan:analyze -Dkiuwan.analysis-scope=completeDelivery
-	mvn kiuwan:analyze -Dkiuwan.analysis-scope=completeDelivery -Dkiuwan.wait-for-results=true
+	mvn kiuwan:analyze -Dkiuwan.analysisScope=completeDelivery
+	mvn kiuwan:analyze -Dkiuwan.analysisScope=completeDelivery -Dkiuwan.waitForResults=true
 
 if 'kiuwan audit' fails, KLA returns an error code 10, and maven build fails. An error message is dumped to console:
 

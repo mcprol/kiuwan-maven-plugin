@@ -26,11 +26,16 @@ package mcp.kiuwan.maven;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
+
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Utilities.
+ */
 class Utils {
 	
 	private static final String LOGPREFIX = "[kiuwan] ";
@@ -49,7 +54,7 @@ class Utils {
 							if (errorCode == 10) {
 								logger.error(LOGPREFIX + "Audit overall result = FAIL");
 								
-								List<String> lines = Files.readAllLines(Paths.get(outputFileName));
+								List<String> lines = Files.readAllLines(Paths.get(outputFileName), Charset.defaultCharset());
 								for (String line: lines) {
 									if (line.contains("Analysis created in Kiuwan with code") || line.contains("Analysis results URL")) {
 										Scanner lineScanner = new Scanner(line);
@@ -71,5 +76,29 @@ class Utils {
 			}			
 		}
 	}	
+	
+	/**
+	 * reads analysisCode from KLA output 
+	 * @param outputFileName
+	 * @return
+	 * @throws MojoExecutionException
+	 */
+	public static String readAnalysisCode(String outputFileName, Log logger) throws MojoExecutionException {
+		String analysisCode = "";
+		try {
+			List<String> lines = Files.readAllLines(Paths.get(outputFileName), Charset.defaultCharset());
+			for (String line : lines) {
+				if (line.contains("Analysis created in Kiuwan with code")) {
+					String[] tokens = StringUtils.trim(line).split("\\s+");
+					analysisCode = StringUtils.trim(tokens[tokens.length-1]);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			throw new MojoExecutionException("", e);
+		}
+
+		return analysisCode;
+	}
 }
 

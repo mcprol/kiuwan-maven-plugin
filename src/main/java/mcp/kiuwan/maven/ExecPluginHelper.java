@@ -28,6 +28,11 @@ import org.twdata.maven.mojoexecutor.MojoExecutor;
 
 import java.util.List;
 
+/**
+ * Utility class to build objects needed for Maven Exec Plugin
+ * 	https://github.com/mojohaus/exec-maven-plugin
+ * 	https://github.com/TimMoore/mojo-executor
+ */
 class ExecPluginHelper {
 
 	public static Plugin createMavenExecPlugin() {
